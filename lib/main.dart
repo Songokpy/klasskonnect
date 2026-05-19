@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'dashboard_screen.dart'; // Standard compilation target route link
 
 void main() {
   runApp(const MainApp());
@@ -81,18 +82,21 @@ class _AuthScreenState extends State<AuthScreen> {
   void _handleAuthentication() {
     if (isSignIn) {
       if (_signInKey.currentState!.validate()) {
-        // Form is verified valid, execute login pipeline
         debugPrint('Logging in: ${_emailController.text.trim()}');
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Processing Sign In...')),
+        
+        // Suppress any active notifications and push route instantly
+        ScaffoldMessenger.of(context).clearSnackBars();
+        Navigator.of(context).pushReplacement(
+          MaterialPageRoute(builder: (context) => const DashboardScreen()),
         );
       }
     } else {
       if (_signUpKey.currentState!.validate()) {
-        // Form is verified valid, execute creation pipeline
         debugPrint('Registering: ${_nameController.text.trim()} - ${_emailController.text.trim()}');
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Creating your account...')),
+        
+        ScaffoldMessenger.of(context).clearSnackBars();
+        Navigator.of(context).pushReplacement(
+          MaterialPageRoute(builder: (context) => const DashboardScreen()),
         );
       }
     }
