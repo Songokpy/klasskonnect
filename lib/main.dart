@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'dashboard_screen.dart'; // Standard compilation target route link
+import 'dashboard_screen.dart';
 
 void main() {
   runApp(const MainApp());
@@ -35,12 +35,11 @@ class AuthScreen extends StatefulWidget {
 class _AuthScreenState extends State<AuthScreen> {
   bool isSignIn = true;
   bool obscurePassword = true;
+  String selectedRole = 'student'; 
 
-  // Global keys for form identification and validation execution
   final _signInKey = GlobalKey<FormState>();
   final _signUpKey = GlobalKey<FormState>();
 
-  // Input Controllers to extract input strings cleanly
   final _nameController = TextEditingController();
   final _emailController = TextEditingController();
   final _passwordController = TextEditingController();
@@ -48,16 +47,15 @@ class _AuthScreenState extends State<AuthScreen> {
   void toggleView() {
     setState(() {
       isSignIn = !isSignIn;
-      // Reset validation states and clear inputs when switching forms
       _signInKey.currentState?.reset();
       _signUpKey.currentState?.reset();
       _nameController.clear();
       _emailController.clear();
       _passwordController.clear();
+      selectedRole = 'student'; 
     });
   }
 
-  // Common email verification regex pattern
   String? _validateEmail(String? value) {
     if (value == null || value.trim().isEmpty) {
       return 'Email address is required';
@@ -84,19 +82,30 @@ class _AuthScreenState extends State<AuthScreen> {
       if (_signInKey.currentState!.validate()) {
         debugPrint('Logging in: ${_emailController.text.trim()}');
         
-        // Suppress any active notifications and push route instantly
+        String determinedRole = 'student';
+        final emailText = _emailController.text.trim().toLowerCase();
+        if (emailText.contains('admin')) {
+          determinedRole = 'admin';
+        } else if (emailText.contains('lecturer')) {
+          determinedRole = 'lecturer';
+        }
+
         ScaffoldMessenger.of(context).clearSnackBars();
         Navigator.of(context).pushReplacement(
-          MaterialPageRoute(builder: (context) => const DashboardScreen()),
+          MaterialPageRoute(
+            builder: (context) => DashboardScreen(userRole: determinedRole),
+          ),
         );
       }
     } else {
       if (_signUpKey.currentState!.validate()) {
-        debugPrint('Registering: ${_nameController.text.trim()} - ${_emailController.text.trim()}');
+        debugPrint('Registering: ${_nameController.text.trim()} as $selectedRole');
         
         ScaffoldMessenger.of(context).clearSnackBars();
         Navigator.of(context).pushReplacement(
-          MaterialPageRoute(builder: (context) => const DashboardScreen()),
+          MaterialPageRoute(
+            builder: (context) => DashboardScreen(userRole: selectedRole),
+          ),
         );
       }
     }
@@ -104,7 +113,6 @@ class _AuthScreenState extends State<AuthScreen> {
 
   @override
   void dispose() {
-    // Clean up controllers when the widget is unmounted
     _nameController.dispose();
     _emailController.dispose();
     _passwordController.dispose();
@@ -115,6 +123,7 @@ class _AuthScreenState extends State<AuthScreen> {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final size = MediaQuery.of(context).size;
+    final double computedWidth = (size.width > 600) ? 460 : (size.width * 0.92);
 
     return Scaffold(
       body: GestureDetector(
@@ -133,42 +142,44 @@ class _AuthScreenState extends State<AuthScreen> {
                 ),
               ),
             ),
-            Center(
-              child: SingleChildScrollView(
-                padding: const EdgeInsets.all(24.0),
-                child: AnimatedContainer(
-                  duration: const Duration(milliseconds: 400),
-                  curve: Curves.easeInOutCubic,
-                  width: size.width > 600 ? 450 : size.width * 0.9,
-                  padding: const EdgeInsets.all(32.0),
-                  decoration: BoxDecoration(
-                    color: Colors.white.withOpacity(0.94),
-                    borderRadius: BorderRadius.circular(28),
-                    boxShadow: [
-                      BoxShadow(
-                        color: Colors.black.withOpacity(0.2),
-                        blurRadius: 20,
-                        offset: const Offset(0, 10),
-                      )
-                    ],
-                  ),
-                  child: AnimatedSwitcher(
-                    duration: const Duration(milliseconds: 450),
-                    switchInCurve: Curves.easeOutBack,
-                    switchOutCurve: Curves.easeInQuad,
-                    transitionBuilder: (Widget child, Animation<double> animation) {
-                      return FadeTransition(
-                        opacity: animation,
-                        child: SlideTransition(
-                          position: Tween<Offset>(
-                            begin: const Offset(0.0, 0.12),
-                            end: Offset.zero,
-                          ).animate(animation),
-                          child: child,
-                        ),
-                      );
-                    },
-                    child: isSignIn ? buildSignInForm(theme) : buildSignUpForm(theme),
+            SafeArea(
+              child: Center(
+                child: SingleChildScrollView(
+                  padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 24.0),
+                  child: AnimatedContainer(
+                    duration: const Duration(milliseconds: 400),
+                    curve: Curves.easeInOutCubic,
+                    width: computedWidth,
+                    padding: const EdgeInsets.all(24.0),
+                    decoration: BoxDecoration(
+                      color: Colors.white.withOpacity(0.96),
+                      borderRadius: BorderRadius.circular(24),
+                      boxShadow: [
+                        BoxShadow(
+                          color: Colors.black.withOpacity(0.15),
+                          blurRadius: 20,
+                          offset: const Offset(0, 8),
+                        )
+                      ],
+                    ),
+                    child: AnimatedSwitcher(
+                      duration: const Duration(milliseconds: 450),
+                      switchInCurve: Curves.easeOutBack,
+                      switchOutCurve: Curves.easeInQuad,
+                      transitionBuilder: (Widget child, Animation<double> animation) {
+                        return FadeTransition(
+                          opacity: animation,
+                          child: SlideTransition(
+                            position: Tween<Offset>(
+                              begin: const Offset(0.0, 0.08),
+                              end: Offset.zero,
+                            ).animate(animation),
+                            child: child,
+                          ),
+                        );
+                      },
+                      child: isSignIn ? buildSignInForm(theme) : buildSignUpForm(theme),
+                    ),
                   ),
                 ),
               ),
@@ -196,13 +207,13 @@ class _AuthScreenState extends State<AuthScreen> {
               ),
               textAlign: TextAlign.center,
             ),
-            const SizedBox(height: 8),
+            const SizedBox(height: 6),
             Text(
-              'Sign in to access your lecture streams',
-              style: theme.textTheme.bodyMedium?.copyWith(color: Colors.grey[600]),
+              'Use "admin" or "lecturer" in email to test specific profile views.',
+              style: theme.textTheme.bodySmall?.copyWith(color: Colors.grey[600]),
               textAlign: TextAlign.center,
             ),
-            const SizedBox(height: 32),
+            const SizedBox(height: 24),
             TextFormField(
               controller: _emailController,
               validator: _validateEmail,
@@ -214,7 +225,7 @@ class _AuthScreenState extends State<AuthScreen> {
               ),
               keyboardType: TextInputType.emailAddress,
             ),
-            const SizedBox(height: 18),
+            const SizedBox(height: 16),
             TextFormField(
               controller: _passwordController,
               validator: _validatePassword,
@@ -240,14 +251,15 @@ class _AuthScreenState extends State<AuthScreen> {
               ),
               child: const Text('Sign In', style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
             ),
-            const SizedBox(height: 24),
+            const SizedBox(height: 20),
             Row(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
-                Text("Don't have an account? ", style: TextStyle(color: Colors.grey[600])),
+                Text("Don't have an account? ", style: TextStyle(color: Colors.grey[600], fontSize: 13)),
                 TextButton(
                   onPressed: toggleView,
-                  child: const Text('Sign Up', style: TextStyle(fontWeight: FontWeight.bold, color: Color(0xFF3B82F6))),
+                  style: TextButton.styleFrom(padding: EdgeInsets.zero),
+                  child: const Text('Sign Up', style: TextStyle(fontWeight: FontWeight.bold, color: Color(0xFF3B82F6), fontSize: 13)),
                 ),
               ],
             ),
@@ -274,13 +286,23 @@ class _AuthScreenState extends State<AuthScreen> {
               ),
               textAlign: TextAlign.center,
             ),
-            const SizedBox(height: 8),
+            const SizedBox(height: 16),
             Text(
-              'Join the centralized communication workspace',
-              style: theme.textTheme.bodyMedium?.copyWith(color: Colors.grey[600]),
-              textAlign: TextAlign.center,
+              'Select Account Type',
+              style: theme.textTheme.bodySmall?.copyWith(fontWeight: FontWeight.bold, color: Colors.grey[700]),
             ),
-            const SizedBox(height: 28),
+            const SizedBox(height: 8),
+            Row(
+              mainAxisSize: MainAxisSize.max,
+              children: [
+                Expanded(child: buildRoleOption('Student', 'student')),
+                const SizedBox(width: 4),
+                Expanded(child: buildRoleOption('Lecturer', 'lecturer')),
+                const SizedBox(width: 4),
+                Expanded(child: buildRoleOption('Admin', 'admin')),
+              ],
+            ),
+            const SizedBox(height: 20),
             TextFormField(
               controller: _nameController,
               validator: (val) => (val == null || val.trim().isEmpty) ? 'Full name is required' : null,
@@ -328,18 +350,46 @@ class _AuthScreenState extends State<AuthScreen> {
               ),
               child: const Text('Get Started', style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
             ),
-            const SizedBox(height: 24),
+            const SizedBox(height: 20),
             Row(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
-                Text("Already have an account? ", style: TextStyle(color: Colors.grey[600])),
+                Text("Already have an account? ", style: TextStyle(color: Colors.grey[600], fontSize: 13)),
                 TextButton(
                   onPressed: toggleView,
-                  child: const Text('Sign In', style: TextStyle(fontWeight: FontWeight.bold, color: Color(0xFF0F172A))),
+                  style: TextButton.styleFrom(padding: EdgeInsets.zero),
+                  child: const Text('Sign In', style: TextStyle(fontWeight: FontWeight.bold, color: Color(0xFF0F172A), fontSize: 13)),
                 ),
               ],
             ),
           ],
+        ),
+      ),
+    );
+  }
+
+  Widget buildRoleOption(String label, String roleValue) {
+    final isSelected = (selectedRole == roleValue);
+    return GestureDetector(
+      onTap: () => setState(() => selectedRole = roleValue),
+      child: AnimatedContainer(
+        duration: const Duration(milliseconds: 200),
+        padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 2),
+        decoration: BoxDecoration(
+          color: isSelected ? const Color(0xFF0F172A) : Colors.transparent,
+          border: Border.all(color: const Color(0xFF0F172A), width: 1),
+          borderRadius: BorderRadius.circular(8),
+        ),
+        child: Text(
+          label,
+          textAlign: TextAlign.center,
+          maxLines: 1,
+          overflow: TextOverflow.ellipsis,
+          style: TextStyle(
+            color: isSelected ? Colors.white : const Color(0xFF0F172A),
+            fontWeight: FontWeight.bold,
+            fontSize: 12,
+          ),
         ),
       ),
     );
