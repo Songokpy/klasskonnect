@@ -35,7 +35,6 @@ class AuthScreen extends StatefulWidget {
 class _AuthScreenState extends State<AuthScreen> {
   bool isSignIn = true;
   bool obscurePassword = true;
-  String selectedRole = 'student'; 
 
   final _signInKey = GlobalKey<FormState>();
   final _signUpKey = GlobalKey<FormState>();
@@ -52,7 +51,6 @@ class _AuthScreenState extends State<AuthScreen> {
       _nameController.clear();
       _emailController.clear();
       _passwordController.clear();
-      selectedRole = 'student'; 
     });
   }
 
@@ -60,9 +58,17 @@ class _AuthScreenState extends State<AuthScreen> {
     if (value == null || value.trim().isEmpty) {
       return 'Email address is required';
     }
+    final emailText = value.trim().toLowerCase();
     final emailRegex = RegExp(r'^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$');
-    if (!emailRegex.hasMatch(value.trim())) {
+    if (!emailRegex.hasMatch(emailText)) {
       return 'Enter a valid email address';
+    }
+
+    // Validation Guard: Only enforce domain rule during Student Public Sign-Up
+    if (!isSignIn) {
+      if (!emailText.endsWith('student.uoeld.ac.ke')) {
+        return 'Registration requires an official @student.uoeld.ac.ke email';
+      }
     }
     return null;
   }
@@ -84,6 +90,7 @@ class _AuthScreenState extends State<AuthScreen> {
         
         String determinedRole = 'student';
         final emailText = _emailController.text.trim().toLowerCase();
+        
         if (emailText.contains('admin')) {
           determinedRole = 'admin';
         } else if (emailText.contains('lecturer')) {
@@ -99,12 +106,13 @@ class _AuthScreenState extends State<AuthScreen> {
       }
     } else {
       if (_signUpKey.currentState!.validate()) {
-        debugPrint('Registering: ${_nameController.text.trim()} as $selectedRole');
+        // Enforces student role assignment natively on registration callback
+        debugPrint('Registering: ${_nameController.text.trim()} automatically as student');
         
         ScaffoldMessenger.of(context).clearSnackBars();
         Navigator.of(context).pushReplacement(
           MaterialPageRoute(
-            builder: (context) => DashboardScreen(userRole: selectedRole),
+            builder: (context) => const DashboardScreen(userRole: 'student'),
           ),
         );
       }
@@ -279,30 +287,20 @@ class _AuthScreenState extends State<AuthScreen> {
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
             Text(
-              'Create Account',
+              'Create Student Account',
               style: theme.textTheme.headlineMedium?.copyWith(
                 fontWeight: FontWeight.bold,
                 color: const Color(0xFF0F172A),
               ),
               textAlign: TextAlign.center,
             ),
-            const SizedBox(height: 16),
+            const SizedBox(height: 6),
             Text(
-              'Select Account Type',
-              style: theme.textTheme.bodySmall?.copyWith(fontWeight: FontWeight.bold, color: Colors.grey[700]),
+              'Registration is restricted to official university student emails.',
+              style: theme.textTheme.bodySmall?.copyWith(color: Colors.grey[600]),
+              textAlign: TextAlign.center,
             ),
-            const SizedBox(height: 8),
-            Row(
-              mainAxisSize: MainAxisSize.max,
-              children: [
-                Expanded(child: buildRoleOption('Student', 'student')),
-                const SizedBox(width: 4),
-                Expanded(child: buildRoleOption('Lecturer', 'lecturer')),
-                const SizedBox(width: 4),
-                Expanded(child: buildRoleOption('Admin', 'admin')),
-              ],
-            ),
-            const SizedBox(height: 20),
+            const SizedBox(height: 24),
             TextFormField(
               controller: _nameController,
               validator: (val) => (val == null || val.trim().isEmpty) ? 'Full name is required' : null,
@@ -318,8 +316,9 @@ class _AuthScreenState extends State<AuthScreen> {
               validator: _validateEmail,
               autovalidateMode: AutovalidateMode.onUserInteraction,
               decoration: InputDecoration(
-                labelText: 'Email Address',
+                labelText: 'Student Email Address',
                 prefixIcon: const Icon(Icons.email_outlined),
+                helperText: 'e.g., username@student.uoeld.ac.ke',
                 border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
               ),
               keyboardType: TextInputType.emailAddress,
@@ -363,33 +362,6 @@ class _AuthScreenState extends State<AuthScreen> {
               ],
             ),
           ],
-        ),
-      ),
-    );
-  }
-
-  Widget buildRoleOption(String label, String roleValue) {
-    final isSelected = (selectedRole == roleValue);
-    return GestureDetector(
-      onTap: () => setState(() => selectedRole = roleValue),
-      child: AnimatedContainer(
-        duration: const Duration(milliseconds: 200),
-        padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 2),
-        decoration: BoxDecoration(
-          color: isSelected ? const Color(0xFF0F172A) : Colors.transparent,
-          border: Border.all(color: const Color(0xFF0F172A), width: 1),
-          borderRadius: BorderRadius.circular(8),
-        ),
-        child: Text(
-          label,
-          textAlign: TextAlign.center,
-          maxLines: 1,
-          overflow: TextOverflow.ellipsis,
-          style: TextStyle(
-            color: isSelected ? Colors.white : const Color(0xFF0F172A),
-            fontWeight: FontWeight.bold,
-            fontSize: 12,
-          ),
         ),
       ),
     );
