@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "863003295183",
+    "project_id": "klasskonnect-portal",
+    "storage_bucket": "klasskonnect-portal.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:863003295183:android:00160db2a17d4c9d7ae6ba",
+        "android_client_info": {
+          "package_name": "com.example.klasskonnect"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyB_WqLXziATbEQLTAW7uOrUHJ-DUpeK97I"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'admin_panel.dart'; // Imports the secure lecturer provisioning engine
 
 class DashboardScreen extends StatelessWidget {
   final String userRole; 
@@ -72,7 +73,7 @@ class DashboardScreen extends StatelessWidget {
           ),
         ),
       ),
-      body: SafeArea(child: _resolveDashboardView(theme)),
+      body: SafeArea(child: _resolveDashboardView(context, theme)), // Added context parameter pass
       floatingActionButton: userRole == 'lecturer'
           ? FloatingActionButton.extended(
               onPressed: () {},
@@ -85,10 +86,10 @@ class DashboardScreen extends StatelessWidget {
     );
   }
 
-  Widget _resolveDashboardView(ThemeData theme) {
+  Widget _resolveDashboardView(BuildContext context, ThemeData theme) {
     switch (userRole) {
       case 'admin':
-        return buildAdminDashboard(theme);
+        return buildAdminDashboard(context, theme); // Passed context through mapping
       case 'lecturer':
         return buildLecturerDashboard(theme);
       case 'student':
@@ -97,10 +98,52 @@ class DashboardScreen extends StatelessWidget {
     }
   }
 
-  Widget buildAdminDashboard(ThemeData theme) {
+  Widget buildAdminDashboard(BuildContext context, ThemeData theme) {
     return ListView(
       padding: const EdgeInsets.all(16.0),
       children: [
+        Text('Administrative Quick Tasks', style: theme.textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold)),
+        const SizedBox(height: 12),
+        
+        // Dynamic Quick Portal Trigger Button
+        InkWell(
+          onTap: () {
+            Navigator.of(context).push(
+              MaterialPageRoute(builder: (context) => const AdminPanelScreen()),
+            );
+          },
+          borderRadius: BorderRadius.circular(12),
+          child: Container(
+            padding: const EdgeInsets.all(16),
+            decoration: BoxDecoration(
+              color: const Color(0xFF1E3A8A), // High contrast premium brand blue
+              borderRadius: BorderRadius.circular(12),
+              boxShadow: [
+                BoxShadow(color: const Color(0xFF1E3A8A).withOpacity(0.2), blurRadius: 8, offset: const Offset(0, 4))
+              ]
+            ),
+            child: Row(
+              children: [
+                const Icon(Icons.person_add_alt_1, color: Colors.white, size: 24),
+                const SizedBox(width: 16),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      const Text('Register New Faculty Lecturer', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 14, color: Colors.white)),
+                      Text('Provision official university accounts and Firestore roles instantly.', style: TextStyle(color: Colors.white.withOpacity(0.8), fontSize: 12)),
+                    ],
+                  ),
+                ),
+                const Icon(Icons.arrow_forward_ios, color: Colors.white, size: 16),
+              ],
+            ),
+          ),
+        ),
+        
+        const SizedBox(height: 24),
+        Text('System Core Overview', style: theme.textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold)),
+        const SizedBox(height: 12),
         LayoutBuilder(
           builder: (context, constraints) {
             final cardWidth = (constraints.maxWidth - 16) / 2;
